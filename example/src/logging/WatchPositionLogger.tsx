@@ -191,7 +191,7 @@ export default function WatchPositionLogger() {
       await ensureDirectoryExists(directory);
 
       const startTime = new Date();
-      const filename = `watch-log-${formatFilenameTimestamp(startTime)}.csv`;
+      const filename = `geolocation-${formatFilenameTimestamp(startTime)}.csv`;
       const targetPath = `${directory}/${filename}`;
 
       await RNFS.writeFile(targetPath, `${CSV_HEADER}\n`, 'utf8');

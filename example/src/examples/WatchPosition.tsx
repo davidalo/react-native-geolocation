@@ -22,6 +22,7 @@ import {
 } from 'react-native';
 import Geolocation, {
   type GeolocationOptions,
+  type GeolocationResponse,
 } from '@react-native-community/geolocation';
 
 const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
@@ -35,6 +36,10 @@ export default function WatchPositionExample() {
   const [useSignificantChanges, setUseSignificantChanges] = useState(false);
   const [interval, setIntervalValue] = useState('');
   const [fastestInterval, setFastestInterval] = useState('');
+  const [currentPosition, setCurrentPosition] =
+    useState<GeolocationResponse | null>(null);
+  const [lastUpdate, setLastUpdate] = useState<number | null>(null);
+  const [subscriptionId, setSubscriptionId] = useState<number | null>(null);
 
   const parseNumber = (value: string) => {
     if (value.trim().length === 0) {
@@ -111,8 +116,9 @@ export default function WatchPositionExample() {
       const currentOptions = buildCurrentPositionOptions();
       console.log('watchPosition.getCurrentPositionOptions', currentOptions);
       Geolocation.getCurrentPosition(
-        (position) => {
-          setPosition(JSON.stringify(position));
+        (nextPosition) => {
+          setCurrentPosition(nextPosition);
+          setLastUpdate(Date.now());
         },
         (error) => Alert.alert('GetCurrentPosition Error', JSON.stringify(error)),
         currentOptions
@@ -121,12 +127,13 @@ export default function WatchPositionExample() {
       const watchOptions = buildWatchOptions();
       console.log('watchPosition.startOptions', watchOptions);
       const watchID = Geolocation.watchPosition(
-        (position) => {
-          console.log('watchPosition', JSON.stringify(position));
-          setPosition(JSON.stringify(position));
+        (nextPosition) => {
+          console.log('watchPosition', JSON.stringify(nextPosition));
+          setCurrentPosition(nextPosition);
+          setLastUpdate(Date.now());
         },
         (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
-        buildWatchOptions()
+        watchOptions
       );
       setSubscriptionId(watchID);
     } catch (error) {
@@ -137,11 +144,10 @@ export default function WatchPositionExample() {
   const clearWatch = () => {
     subscriptionId !== null && Geolocation.clearWatch(subscriptionId);
     setSubscriptionId(null);
-    setPosition(null);
+    setCurrentPosition(null);
+    setLastUpdate(null);
   };
 
-  const [position, setPosition] = useState<string | null>(null);
-  const [subscriptionId, setSubscriptionId] = useState<number | null>(null);
   useEffect(() => {
     return () => {
       clearWatch();
@@ -225,8 +231,13 @@ export default function WatchPositionExample() {
       )}
       <Text>
         <Text style={styles.title}>Last position: </Text>
-        {position || 'unknown'}
+        {currentPosition ? JSON.stringify(currentPosition) : 'unknown'}
       </Text>
+      {lastUpdate !== null && (
+        <Text style={styles.caption}>
+          Last update: {new Date(lastUpdate).toLocaleTimeString()}
+        </Text>
+      )}
       {subscriptionId !== null ? (
         <Button title="Clear Watch" onPress={clearWatch} />
       ) : (
@@ -257,5 +268,9 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     minWidth: 100,
     textAlign: 'right',
+  },
+  caption: {
+    marginBottom: 12,
+    color: '#555',
   },
 });

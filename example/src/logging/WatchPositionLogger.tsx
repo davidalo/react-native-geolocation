@@ -94,7 +94,7 @@ const LoggingStatus = ({
   isClearing,
   hasStoredLogs,
   entries,
-  lastUpdate,
+  latestTimestamp,
   error,
 }: {
   filePath: string | null;
@@ -102,7 +102,7 @@ const LoggingStatus = ({
   isClearing: boolean;
   hasStoredLogs: boolean;
   entries: number;
-  lastUpdate: number | null;
+  latestTimestamp: number | null;
   error: string | null;
 }) => {
   return (
@@ -120,9 +120,9 @@ const LoggingStatus = ({
       {filePath !== null && (
         <Text style={styles.statusPath}>File: {filePath}</Text>
       )}
-      {lastUpdate !== null && (
+      {latestTimestamp !== null && (
         <Text style={styles.statusLabel}>
-          Last update: {new Date(lastUpdate).toLocaleTimeString()}
+          Position timestamp: {new Date(latestTimestamp).toLocaleTimeString()}
         </Text>
       )}
       {error !== null && <Text style={styles.statusError}>Error: {error}</Text>}
@@ -138,7 +138,6 @@ export default function WatchPositionLogger() {
   const [isLogging, setIsLogging] = useState(false);
   const [entries, setEntries] = useState(0);
   const [filePath, setFilePath] = useState<string | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
   const [hasStoredLogs, setHasStoredLogs] = useState(false);
@@ -205,7 +204,6 @@ export default function WatchPositionLogger() {
     try {
       setError(null);
       setEntries(0);
-      setLastUpdate(null);
 
       const directory = getTargetDirectory();
       await ensureDirectoryExists(directory);
@@ -227,7 +225,6 @@ export default function WatchPositionLogger() {
       Geolocation.getCurrentPosition(
         (position) => {
           setCurrentPosition(position);
-          setLastUpdate(Date.now());
           appendPosition(position);
         },
         (positionError) => {
@@ -244,7 +241,6 @@ export default function WatchPositionLogger() {
         (position) => {
           console.log('logging.watchPosition', JSON.stringify(position));
           setCurrentPosition(position);
-          setLastUpdate(Date.now());
           appendPosition(position);
         },
         (watchError) => {
@@ -317,7 +313,6 @@ export default function WatchPositionLogger() {
       setFilePath(null);
       setEntries(0);
       setCurrentPosition(null);
-      setLastUpdate(null);
       setHasStoredLogs(false);
     } catch (clearError) {
       const message =
@@ -343,7 +338,7 @@ export default function WatchPositionLogger() {
         isClearing={isClearing}
         hasStoredLogs={hasStoredLogs}
         entries={entries}
-        lastUpdate={lastUpdate}
+        latestTimestamp={currentPosition?.timestamp ?? null}
         error={error}
       />
       <Text>

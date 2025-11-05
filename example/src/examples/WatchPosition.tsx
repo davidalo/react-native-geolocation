@@ -25,7 +25,6 @@ export default function WatchPositionExample() {
     useState<WatchOptionFormValues>(initialWatchOptionValues);
   const [currentPosition, setCurrentPosition] =
     useState<GeolocationResponse | null>(null);
-  const [lastUpdate, setLastUpdate] = useState<number | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<number | null>(null);
 
   const watchPosition = () => {
@@ -35,7 +34,6 @@ export default function WatchPositionExample() {
       Geolocation.getCurrentPosition(
         (nextPosition) => {
           setCurrentPosition(nextPosition);
-          setLastUpdate(Date.now());
         },
         (error) => Alert.alert('GetCurrentPosition Error', JSON.stringify(error)),
         currentOptions
@@ -47,7 +45,6 @@ export default function WatchPositionExample() {
         (nextPosition) => {
           console.log('watchPosition', JSON.stringify(nextPosition));
           setCurrentPosition(nextPosition);
-          setLastUpdate(Date.now());
         },
         (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
         watchOptions
@@ -62,7 +59,6 @@ export default function WatchPositionExample() {
     subscriptionId !== null && Geolocation.clearWatch(subscriptionId);
     setSubscriptionId(null);
     setCurrentPosition(null);
-    setLastUpdate(null);
   };
 
   useEffect(() => {
@@ -84,9 +80,10 @@ export default function WatchPositionExample() {
         <Text style={styles.title}>Last position: </Text>
         {currentPosition ? JSON.stringify(currentPosition) : 'unknown'}
       </Text>
-      {lastUpdate !== null && (
+      {currentPosition && (
         <Text style={styles.caption}>
-          Last update: {new Date(lastUpdate).toLocaleTimeString()}
+          Position timestamp:{' '}
+          {new Date(currentPosition.timestamp).toLocaleTimeString()}
         </Text>
       )}
       {subscriptionId !== null ? (
@@ -101,6 +98,24 @@ export default function WatchPositionExample() {
 const styles = StyleSheet.create({
   title: {
     fontWeight: '500',
+  },
+  row: {
+    marginBottom: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  label: {
+    flex: 1,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 4,
+    minWidth: 100,
+    textAlign: 'right',
   },
   caption: {
     marginBottom: 12,

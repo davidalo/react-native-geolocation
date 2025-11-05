@@ -48,13 +48,6 @@ const ensureDirectoryExists = async (path: string) => {
   }
 };
 
-const formatFilenameTimestamp = (date: Date) => {
-  const [datePart, timePart] = date.toISOString().split('T');
-  const timeSection = timePart.split('.')[0];
-
-  return `${datePart.replace(/-/g, '')}-${timeSection.replace(/:/g, '')}`;
-};
-
 const buildCsvRow = (position: GeolocationResponse) => {
   const { coords, timestamp } = position;
   const values = [
@@ -190,7 +183,7 @@ export default function WatchPositionLogger() {
       await ensureDirectoryExists(directory);
 
       const startTime = new Date();
-      const filename = `geolocation-${formatFilenameTimestamp(startTime)}.csv`;
+      const filename = `geolocation-${startTime.toISOString()}.csv`;
       const targetPath = `${directory}/${filename}`;
 
       await RNFS.writeFile(targetPath, `${CSV_HEADER}\n`, 'utf8');

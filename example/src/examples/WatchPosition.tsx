@@ -45,7 +45,7 @@ export default function WatchPositionExample() {
     return Number.isFinite(parsed) ? parsed : undefined;
   };
 
-  const buildOptions = (): GeolocationOptions => {
+  const buildWatchOptions = (): GeolocationOptions => {
     const options: GeolocationOptions = {};
 
     if (enableHighAccuracy) {
@@ -86,15 +86,43 @@ export default function WatchPositionExample() {
     return options;
   };
 
+  const buildCurrentPositionOptions = (): GeolocationOptions => {
+    const options: GeolocationOptions = {};
+
+    if (enableHighAccuracy) {
+      options.enableHighAccuracy = true;
+    }
+
+    const timeoutValue = parseNumber(timeout);
+    if (timeoutValue !== undefined) {
+      options.timeout = timeoutValue;
+    }
+
+    const maximumAgeValue = parseNumber(maximumAge);
+    if (maximumAgeValue !== undefined) {
+      options.maximumAge = maximumAgeValue;
+    }
+
+    return options;
+  };
+
   const watchPosition = () => {
     try {
+      Geolocation.getCurrentPosition(
+        (position) => {
+          setPosition(JSON.stringify(position));
+        },
+        (error) => Alert.alert('GetCurrentPosition Error', JSON.stringify(error)),
+        buildCurrentPositionOptions()
+      );
+
       const watchID = Geolocation.watchPosition(
         (position) => {
           console.log('watchPosition', JSON.stringify(position));
           setPosition(JSON.stringify(position));
         },
         (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
-        buildOptions()
+        buildWatchOptions()
       );
       setSubscriptionId(watchID);
     } catch (error) {

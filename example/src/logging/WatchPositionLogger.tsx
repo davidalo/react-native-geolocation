@@ -50,15 +50,10 @@ const ensureDirectoryExists = async (path: string) => {
 };
 
 const formatFilenameTimestamp = (date: Date) => {
-  const pad = (value: number) => value.toString().padStart(2, '0');
-  const year = date.getFullYear();
-  const month = pad(date.getMonth() + 1);
-  const day = pad(date.getDate());
-  const hours = pad(date.getHours());
-  const minutes = pad(date.getMinutes());
-  const seconds = pad(date.getSeconds());
+  const [datePart, timePart] = date.toISOString().split('T');
+  const timeSection = timePart.split('.')[0];
 
-  return `${year}${month}${day}-${hours}${minutes}${seconds}`;
+  return `${datePart.replace(/-/g, '')}-${timeSection.replace(/:/g, '')}`;
 };
 
 const buildCsvRow = (position: GeolocationResponse) => {

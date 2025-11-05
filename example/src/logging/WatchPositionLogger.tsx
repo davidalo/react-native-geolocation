@@ -25,7 +25,6 @@ import RNFS from 'react-native-fs';
 
 import {
   WatchOptionsForm,
-  buildCurrentPositionOptions,
   buildWatchOptions,
   initialWatchOptionValues,
   type WatchOptionFormValues,
@@ -198,24 +197,6 @@ export default function WatchPositionLogger() {
       filePathRef.current = targetPath;
       setFilePath(targetPath);
       setHasStoredLogs(true);
-
-      const currentOptions = buildCurrentPositionOptions(formValues);
-      console.log(
-        'logging.watchPosition.getCurrentPositionOptions',
-        currentOptions
-      );
-      Geolocation.getCurrentPosition(
-        (nextPosition) => {
-          setPosition(nextPosition);
-          appendPosition(nextPosition);
-        },
-        (positionError) => {
-          const message = JSON.stringify(positionError);
-          setError(message);
-          Alert.alert('GetCurrentPosition Error', message);
-        },
-        currentOptions
-      );
 
       const watchOptions = buildWatchOptions(formValues);
       console.log('logging.watchPosition.startOptions', watchOptions);

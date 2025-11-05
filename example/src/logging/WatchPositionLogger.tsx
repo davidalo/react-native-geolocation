@@ -133,7 +133,7 @@ const LoggingStatus = ({
 export default function WatchPositionLogger() {
   const [formValues, setFormValues] =
     useState<WatchOptionFormValues>(initialWatchOptionValues);
-  const [currentPosition, setCurrentPosition] =
+  const [position, setPosition] =
     useState<GeolocationResponse | null>(null);
   const [isLogging, setIsLogging] = useState(false);
   const [entries, setEntries] = useState(0);
@@ -223,9 +223,9 @@ export default function WatchPositionLogger() {
         currentOptions
       );
       Geolocation.getCurrentPosition(
-        (position) => {
-          setCurrentPosition(position);
-          appendPosition(position);
+        (nextPosition) => {
+          setPosition(nextPosition);
+          appendPosition(nextPosition);
         },
         (positionError) => {
           const message = JSON.stringify(positionError);
@@ -238,10 +238,10 @@ export default function WatchPositionLogger() {
       const watchOptions = buildWatchOptions(formValues);
       console.log('logging.watchPosition.startOptions', watchOptions);
       const watchId = Geolocation.watchPosition(
-        (position) => {
-          console.log('logging.watchPosition', JSON.stringify(position));
-          setCurrentPosition(position);
-          appendPosition(position);
+        (nextPosition) => {
+          console.log('logging.watchPosition', JSON.stringify(nextPosition));
+          setPosition(nextPosition);
+          appendPosition(nextPosition);
         },
         (watchError) => {
           const message = JSON.stringify(watchError);
@@ -312,7 +312,7 @@ export default function WatchPositionLogger() {
       filePathRef.current = null;
       setFilePath(null);
       setEntries(0);
-      setCurrentPosition(null);
+      setPosition(null);
       setHasStoredLogs(false);
     } catch (clearError) {
       const message =
@@ -338,12 +338,12 @@ export default function WatchPositionLogger() {
         isClearing={isClearing}
         hasStoredLogs={hasStoredLogs}
         entries={entries}
-        latestTimestamp={currentPosition?.timestamp ?? null}
+        latestTimestamp={position?.timestamp ?? null}
         error={error}
       />
       <Text>
         <Text style={styles.title}>Last position: </Text>
-        {currentPosition ? JSON.stringify(currentPosition) : 'unknown'}
+        {position ? JSON.stringify(position) : 'unknown'}
       </Text>
       {isLogging ? (
         <Button title="Stop logging" onPress={stopLogging} />

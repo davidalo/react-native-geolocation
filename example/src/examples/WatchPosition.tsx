@@ -23,7 +23,7 @@ import {
 export default function WatchPositionExample() {
   const [formValues, setFormValues] =
     useState<WatchOptionFormValues>(initialWatchOptionValues);
-  const [currentPosition, setCurrentPosition] =
+  const [position, setPosition] =
     useState<GeolocationResponse | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<number | null>(null);
 
@@ -33,7 +33,7 @@ export default function WatchPositionExample() {
       console.log('watchPosition.getCurrentPositionOptions', currentOptions);
       Geolocation.getCurrentPosition(
         (nextPosition) => {
-          setCurrentPosition(nextPosition);
+          setPosition(nextPosition);
         },
         (error) => Alert.alert('GetCurrentPosition Error', JSON.stringify(error)),
         currentOptions
@@ -44,7 +44,7 @@ export default function WatchPositionExample() {
       const watchID = Geolocation.watchPosition(
         (nextPosition) => {
           console.log('watchPosition', JSON.stringify(nextPosition));
-          setCurrentPosition(nextPosition);
+          setPosition(nextPosition);
         },
         (error) => Alert.alert('WatchPosition Error', JSON.stringify(error)),
         watchOptions
@@ -58,7 +58,7 @@ export default function WatchPositionExample() {
   const clearWatch = () => {
     subscriptionId !== null && Geolocation.clearWatch(subscriptionId);
     setSubscriptionId(null);
-    setCurrentPosition(null);
+    setPosition(null);
   };
 
   useEffect(() => {
@@ -78,12 +78,12 @@ export default function WatchPositionExample() {
       />
       <Text>
         <Text style={styles.title}>Last position: </Text>
-        {currentPosition ? JSON.stringify(currentPosition) : 'unknown'}
+        {position ? JSON.stringify(position) : 'unknown'}
       </Text>
-      {currentPosition && (
+      {position && (
         <Text style={styles.caption}>
           Position timestamp:{' '}
-          {new Date(currentPosition.timestamp).toLocaleTimeString()}
+          {new Date(position.timestamp).toLocaleTimeString()}
         </Text>
       )}
       {subscriptionId !== null ? (

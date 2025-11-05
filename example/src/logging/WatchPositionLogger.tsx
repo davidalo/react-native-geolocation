@@ -91,12 +91,14 @@ const buildCsvRow = (position: GeolocationResponse) => {
 const LoggingStatus = ({
   filePath,
   isLogging,
+  isClearing,
   entries,
   lastUpdate,
   error,
 }: {
   filePath: string | null;
   isLogging: boolean;
+  isClearing: boolean;
   entries: number;
   lastUpdate: number | null;
   error: string | null;
@@ -106,6 +108,9 @@ const LoggingStatus = ({
       <Text style={styles.statusLabel}>
         Status: {isLogging ? 'Logging' : 'Idle'}
       </Text>
+      {isClearing && (
+        <Text style={styles.statusLabel}>Clearing stored logs...</Text>
+      )}
       <Text style={styles.statusLabel}>Entries written: {entries}</Text>
       {filePath !== null && (
         <Text style={styles.statusPath}>File: {filePath}</Text>
@@ -130,6 +135,7 @@ export default function WatchPositionLogger() {
   const [filePath, setFilePath] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
 
   const watchIdRef = useRef<number | null>(null);
   const filePathRef = useRef<string | null>(null);
@@ -236,6 +242,60 @@ export default function WatchPositionLogger() {
     };
   }, [stopLogging]);
 
+  const clearLogs = useCallback(async () => {
+    if (isLogging) {
+      Alert.alert('Clear Logs', 'Stop logging before clearing stored files.');
+      return;
+    }
+
+    try {
+      setIsClearing(true);
+      setError(null);
+
+      const directory = getTargetDirectory();
+      const exists = await RNFS.exists(directory);
+      if (!exists) {
+        Alert.alert('Clear Logs', 'No log directory found.');
+        return;
+      }
+
+      const entriesInDir = await RNFS.readDir(directory);
+      const csvFiles = entriesInDir.filter(
+        (entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.csv')
+      );
+
+      if (csvFiles.length === 0) {
+        Alert.alert('Clear Logs', 'No CSV log files found.');
+        return;
+      }
+
+      const results = await Promise.allSettled(
+        csvFiles.map((entry) => RNFS.unlink(entry.path))
+      );
+      const failed = results.filter(
+        (result) => result.status === 'rejected'
+      ) as PromiseRejectedResult[];
+
+      if (failed.length > 0) {
+        throw failed[0].reason ?? new Error('Failed to delete some files.');
+      }
+
+      filePathRef.current = null;
+      setFilePath(null);
+      setEntries(0);
+      setCurrentPosition(null);
+      setLastUpdate(null);
+      Alert.alert('Clear Logs', 'Stored CSV logs deleted.');
+    } catch (clearError) {
+      const message =
+        clearError instanceof Error ? clearError.message : String(clearError);
+      setError(message);
+      Alert.alert('Clear Logs Error', message);
+    } finally {
+      setIsClearing(false);
+    }
+  }, [isLogging]);
+
   return (
     <View>
       <WatchOptionsForm
@@ -247,6 +307,7 @@ export default function WatchPositionLogger() {
       <LoggingStatus
         filePath={filePath}
         isLogging={isLogging}
+        isClearing={isClearing}
         entries={entries}
         lastUpdate={lastUpdate}
         error={error}
@@ -260,6 +321,13 @@ export default function WatchPositionLogger() {
       ) : (
         <Button title="Start logging" onPress={startLogging} />
       )}
+      <View style={styles.clearLogsButton}>
+        <Button
+          title="Clear logs on device"
+          onPress={clearLogs}
+          disabled={isLogging || isClearing}
+        />
+      </View>
     </View>
   );
 }
@@ -283,5 +351,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     color: '#b00020',
   },
+  clearLogsButton: {
+    marginTop: 16,
+  },
 });
-

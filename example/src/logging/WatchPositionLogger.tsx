@@ -209,6 +209,7 @@ export default function WatchPositionLogger() {
       watchIdRef.current = watchId;
       setIsLogging(true);
     } catch (startError) {
+      console.log('logging.watchPosition.startError', startError);
       const message =
         startError instanceof Error ? startError.message : String(startError);
       setError(message);

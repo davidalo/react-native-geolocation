@@ -129,14 +129,16 @@ export function WatchOptionsForm({ values, onChange }: Props) {
   return (
     <>
       <View style={styles.row}>
-        <Text style={styles.label}>High accuracy (off)</Text>
+        <Text style={styles.label}>High accuracy (default: off)</Text>
         <Switch
           value={values.enableHighAccuracy}
           onValueChange={(next) => onChange('enableHighAccuracy', next)}
         />
       </View>
       <View style={styles.row}>
-        <Text style={styles.label}>Timeout (ms · {DEFAULT_TIMEOUT_MS})</Text>
+        <Text style={styles.label}>
+          Timeout (ms · default: {DEFAULT_TIMEOUT_MS})
+        </Text>
         <TextInput
           style={styles.input}
           keyboardType="numeric"
@@ -146,7 +148,7 @@ export function WatchOptionsForm({ values, onChange }: Props) {
         />
       </View>
       <View style={styles.row}>
-        <Text style={styles.label}>Maximum age (ms · Infinity)</Text>
+        <Text style={styles.label}>Maximum age (ms · default: Infinity)</Text>
         <TextInput
           style={styles.input}
           keyboardType="numeric"
@@ -157,7 +159,7 @@ export function WatchOptionsForm({ values, onChange }: Props) {
       </View>
       <View style={styles.row}>
         <Text style={styles.label}>
-          Distance filter (m · {DEFAULT_DISTANCE_FILTER_M})
+          Distance filter (m · default: {DEFAULT_DISTANCE_FILTER_M})
         </Text>
         <TextInput
           style={styles.input}
@@ -169,7 +171,7 @@ export function WatchOptionsForm({ values, onChange }: Props) {
       </View>
       {Platform.OS === 'ios' && (
         <View style={styles.row}>
-          <Text style={styles.label}>Use significant changes (false)</Text>
+          <Text style={styles.label}>Use significant changes (default: false)</Text>
           <Switch
             value={values.useSignificantChanges}
             onValueChange={(next) => onChange('useSignificantChanges', next)}
@@ -179,7 +181,7 @@ export function WatchOptionsForm({ values, onChange }: Props) {
       {Platform.OS === 'android' && (
         <>
           <View style={styles.row}>
-            <Text style={styles.label}>Interval (ms · system)</Text>
+            <Text style={styles.label}>Interval (ms · default: system)</Text>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
@@ -189,7 +191,7 @@ export function WatchOptionsForm({ values, onChange }: Props) {
             />
           </View>
           <View style={styles.row}>
-            <Text style={styles.label}>Fastest interval (ms · system)</Text>
+            <Text style={styles.label}>Fastest interval (ms · default: system)</Text>
             <TextInput
               style={styles.input}
               keyboardType="numeric"
@@ -224,4 +226,3 @@ const styles = StyleSheet.create({
     textAlign: 'right',
   },
 });
-

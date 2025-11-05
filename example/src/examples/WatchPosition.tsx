@@ -10,110 +10,27 @@
 'use strict';
 
 import React, { useState, useEffect } from 'react';
+import { StyleSheet, Text, View, Alert, Button } from 'react-native';
+import Geolocation, { type GeolocationResponse } from '@react-native-community/geolocation';
 import {
-  StyleSheet,
-  Text,
-  View,
-  Alert,
-  Button,
-  Switch,
-  TextInput,
-  Platform,
-} from 'react-native';
-import Geolocation, {
-  type GeolocationOptions,
-  type GeolocationResponse,
-} from '@react-native-community/geolocation';
-
-const DEFAULT_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
-const DEFAULT_DISTANCE_FILTER_M = 100;
+  WatchOptionsForm,
+  buildCurrentPositionOptions,
+  buildWatchOptions,
+  initialWatchOptionValues,
+  type WatchOptionFormValues,
+} from '../components/WatchOptionsForm';
 
 export default function WatchPositionExample() {
-  const [enableHighAccuracy, setEnableHighAccuracy] = useState(false);
-  const [timeout, setTimeoutValue] = useState('');
-  const [maximumAge, setMaximumAge] = useState('');
-  const [distanceFilter, setDistanceFilter] = useState('');
-  const [useSignificantChanges, setUseSignificantChanges] = useState(false);
-  const [interval, setIntervalValue] = useState('');
-  const [fastestInterval, setFastestInterval] = useState('');
+  const [formValues, setFormValues] =
+    useState<WatchOptionFormValues>(initialWatchOptionValues);
   const [currentPosition, setCurrentPosition] =
     useState<GeolocationResponse | null>(null);
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
   const [subscriptionId, setSubscriptionId] = useState<number | null>(null);
 
-  const parseNumber = (value: string) => {
-    if (value.trim().length === 0) {
-      return undefined;
-    }
-
-    const parsed = Number(value);
-    return Number.isFinite(parsed) ? parsed : undefined;
-  };
-
-  const buildWatchOptions = (): GeolocationOptions => {
-    const options: GeolocationOptions = {};
-
-    if (enableHighAccuracy) {
-      options.enableHighAccuracy = true;
-    }
-
-    const timeoutValue = parseNumber(timeout);
-    if (timeoutValue !== undefined) {
-      options.timeout = timeoutValue;
-    }
-
-    const maximumAgeValue = parseNumber(maximumAge);
-    if (maximumAgeValue !== undefined) {
-      options.maximumAge = maximumAgeValue;
-    }
-
-    const distanceFilterValue = parseNumber(distanceFilter);
-    if (distanceFilterValue !== undefined) {
-      options.distanceFilter = distanceFilterValue;
-    }
-
-    if (Platform.OS === 'ios') {
-      options.useSignificantChanges = useSignificantChanges;
-    }
-
-    if (Platform.OS === 'android') {
-      const intervalValue = parseNumber(interval);
-      if (intervalValue !== undefined) {
-        options.interval = intervalValue;
-      }
-
-      const fastestIntervalValue = parseNumber(fastestInterval);
-      if (fastestIntervalValue !== undefined) {
-        options.fastestInterval = fastestIntervalValue;
-      }
-    }
-
-    return options;
-  };
-
-  const buildCurrentPositionOptions = (): GeolocationOptions => {
-    const options: GeolocationOptions = {};
-
-    if (enableHighAccuracy) {
-      options.enableHighAccuracy = true;
-    }
-
-    const timeoutValue = parseNumber(timeout);
-    if (timeoutValue !== undefined) {
-      options.timeout = timeoutValue;
-    }
-
-    const maximumAgeValue = parseNumber(maximumAge);
-    if (maximumAgeValue !== undefined) {
-      options.maximumAge = maximumAgeValue;
-    }
-
-    return options;
-  };
-
   const watchPosition = () => {
     try {
-      const currentOptions = buildCurrentPositionOptions();
+      const currentOptions = buildCurrentPositionOptions(formValues);
       console.log('watchPosition.getCurrentPositionOptions', currentOptions);
       Geolocation.getCurrentPosition(
         (nextPosition) => {
@@ -124,7 +41,7 @@ export default function WatchPositionExample() {
         currentOptions
       );
 
-      const watchOptions = buildWatchOptions();
+      const watchOptions = buildWatchOptions(formValues);
       console.log('watchPosition.startOptions', watchOptions);
       const watchID = Geolocation.watchPosition(
         (nextPosition) => {
@@ -157,78 +74,12 @@ export default function WatchPositionExample() {
 
   return (
     <View>
-      <View style={styles.row}>
-        <Text style={styles.label}>High accuracy (off)</Text>
-        <Switch
-          value={enableHighAccuracy}
-          onValueChange={setEnableHighAccuracy}
-        />
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Timeout (ms · {DEFAULT_TIMEOUT_MS})</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={timeout}
-          onChangeText={setTimeoutValue}
-          placeholder={`${DEFAULT_TIMEOUT_MS}`}
-        />
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>Maximum age (ms · Infinity)</Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={maximumAge}
-          onChangeText={setMaximumAge}
-          placeholder="Infinity"
-        />
-      </View>
-      <View style={styles.row}>
-        <Text style={styles.label}>
-          Distance filter (m · {DEFAULT_DISTANCE_FILTER_M})
-        </Text>
-        <TextInput
-          style={styles.input}
-          keyboardType="numeric"
-          value={distanceFilter}
-          onChangeText={setDistanceFilter}
-          placeholder={`${DEFAULT_DISTANCE_FILTER_M}`}
-        />
-      </View>
-      {Platform.OS === 'ios' && (
-        <View style={styles.row}>
-          <Text style={styles.label}>Use significant changes (false)</Text>
-          <Switch
-            value={useSignificantChanges}
-            onValueChange={setUseSignificantChanges}
-          />
-        </View>
-      )}
-      {Platform.OS === 'android' && (
-        <>
-          <View style={styles.row}>
-            <Text style={styles.label}>Interval (ms · system)</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              value={interval}
-              onChangeText={setIntervalValue}
-              placeholder="System"
-            />
-          </View>
-          <View style={styles.row}>
-            <Text style={styles.label}>Fastest interval (ms · system)</Text>
-            <TextInput
-              style={styles.input}
-              keyboardType="numeric"
-              value={fastestInterval}
-              onChangeText={setFastestInterval}
-              placeholder="System"
-            />
-          </View>
-        </>
-      )}
+      <WatchOptionsForm
+        values={formValues}
+        onChange={(field, value) =>
+          setFormValues((prev) => ({ ...prev, [field]: value }))
+        }
+      />
       <Text>
         <Text style={styles.title}>Last position: </Text>
         {currentPosition ? JSON.stringify(currentPosition) : 'unknown'}
@@ -250,24 +101,6 @@ export default function WatchPositionExample() {
 const styles = StyleSheet.create({
   title: {
     fontWeight: '500',
-  },
-  row: {
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  label: {
-    flex: 1,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 4,
-    minWidth: 100,
-    textAlign: 'right',
   },
   caption: {
     marginBottom: 12,

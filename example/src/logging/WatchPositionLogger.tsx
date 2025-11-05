@@ -92,6 +92,7 @@ const LoggingStatus = ({
   filePath,
   isLogging,
   isClearing,
+  hasStoredLogs,
   entries,
   lastUpdate,
   error,
@@ -99,6 +100,7 @@ const LoggingStatus = ({
   filePath: string | null;
   isLogging: boolean;
   isClearing: boolean;
+  hasStoredLogs: boolean;
   entries: number;
   lastUpdate: number | null;
   error: string | null;
@@ -112,6 +114,9 @@ const LoggingStatus = ({
         <Text style={styles.statusLabel}>Clearing stored logs...</Text>
       )}
       <Text style={styles.statusLabel}>Entries written: {entries}</Text>
+      <Text style={styles.statusLabel}>
+        Stored logs on device: {hasStoredLogs ? 'Yes' : 'No'}
+      </Text>
       {filePath !== null && (
         <Text style={styles.statusPath}>File: {filePath}</Text>
       )}
@@ -136,9 +141,32 @@ export default function WatchPositionLogger() {
   const [lastUpdate, setLastUpdate] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isClearing, setIsClearing] = useState(false);
+  const [hasStoredLogs, setHasStoredLogs] = useState(false);
 
   const watchIdRef = useRef<number | null>(null);
   const filePathRef = useRef<string | null>(null);
+
+  const detectStoredLogs = useCallback(async () => {
+    try {
+      const directory = getTargetDirectory();
+      const exists = await RNFS.exists(directory);
+      if (!exists) {
+        setHasStoredLogs(false);
+        return;
+      }
+
+      const entriesInDir = await RNFS.readDir(directory);
+      const hasCsv = entriesInDir.some(
+        (entry) => entry.isFile() && entry.name.toLowerCase().endsWith('.csv')
+      );
+      setHasStoredLogs(hasCsv);
+    } catch (detectError) {
+      const message =
+        detectError instanceof Error ? detectError.message : String(detectError);
+      setError(message);
+      setHasStoredLogs(false);
+    }
+  }, []);
 
   const appendPosition = useCallback((position: GeolocationResponse) => {
     const targetPath = filePathRef.current;
@@ -189,6 +217,7 @@ export default function WatchPositionLogger() {
       await RNFS.writeFile(targetPath, `${CSV_HEADER}\n`, 'utf8');
       filePathRef.current = targetPath;
       setFilePath(targetPath);
+      setHasStoredLogs(true);
 
       const currentOptions = buildCurrentPositionOptions(formValues);
       console.log(
@@ -242,6 +271,10 @@ export default function WatchPositionLogger() {
     };
   }, [stopLogging]);
 
+  useEffect(() => {
+    detectStoredLogs();
+  }, [detectStoredLogs]);
+
   const clearLogs = useCallback(async () => {
     if (isLogging) {
       Alert.alert('Clear Logs', 'Stop logging before clearing stored files.');
@@ -255,7 +288,7 @@ export default function WatchPositionLogger() {
       const directory = getTargetDirectory();
       const exists = await RNFS.exists(directory);
       if (!exists) {
-        Alert.alert('Clear Logs', 'No log directory found.');
+        setHasStoredLogs(false);
         return;
       }
 
@@ -265,7 +298,7 @@ export default function WatchPositionLogger() {
       );
 
       if (csvFiles.length === 0) {
-        Alert.alert('Clear Logs', 'No CSV log files found.');
+        setHasStoredLogs(false);
         return;
       }
 
@@ -285,16 +318,16 @@ export default function WatchPositionLogger() {
       setEntries(0);
       setCurrentPosition(null);
       setLastUpdate(null);
-      Alert.alert('Clear Logs', 'Stored CSV logs deleted.');
+      setHasStoredLogs(false);
     } catch (clearError) {
       const message =
         clearError instanceof Error ? clearError.message : String(clearError);
       setError(message);
-      Alert.alert('Clear Logs Error', message);
     } finally {
       setIsClearing(false);
+      detectStoredLogs();
     }
-  }, [isLogging]);
+  }, [detectStoredLogs, isLogging]);
 
   return (
     <View>
@@ -308,6 +341,7 @@ export default function WatchPositionLogger() {
         filePath={filePath}
         isLogging={isLogging}
         isClearing={isClearing}
+        hasStoredLogs={hasStoredLogs}
         entries={entries}
         lastUpdate={lastUpdate}
         error={error}
@@ -325,7 +359,7 @@ export default function WatchPositionLogger() {
         <Button
           title="Clear logs on device"
           onPress={clearLogs}
-          disabled={isLogging || isClearing}
+          disabled={isLogging || isClearing || !hasStoredLogs}
         />
       </View>
     </View>

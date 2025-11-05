@@ -83,16 +83,12 @@ const buildCsvRow = (position: GeolocationResponse) => {
 const LoggingStatus = ({
   filePath,
   isLogging,
-  isClearing,
-  hasStoredLogs,
   entries,
   latestTimestamp,
   error,
 }: {
   filePath: string | null;
   isLogging: boolean;
-  isClearing: boolean;
-  hasStoredLogs: boolean;
   entries: number;
   latestTimestamp: number | null;
   error: string | null;
@@ -102,13 +98,7 @@ const LoggingStatus = ({
       <Text style={styles.statusLabel}>
         Status: {isLogging ? 'Logging' : 'Idle'}
       </Text>
-      {isClearing && (
-        <Text style={styles.statusLabel}>Clearing stored logs...</Text>
-      )}
       <Text style={styles.statusLabel}>Entries written: {entries}</Text>
-      <Text style={styles.statusLabel}>
-        Stored logs on device: {hasStoredLogs ? 'Yes' : 'No'}
-      </Text>
       {filePath !== null && (
         <Text style={styles.statusPath}>File: {filePath}</Text>
       )}
@@ -327,8 +317,6 @@ export default function WatchPositionLogger() {
       <LoggingStatus
         filePath={filePath}
         isLogging={isLogging}
-        isClearing={isClearing}
-        hasStoredLogs={hasStoredLogs}
         entries={entries}
         latestTimestamp={position?.timestamp ?? null}
         error={error}

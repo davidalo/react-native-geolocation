@@ -108,14 +108,18 @@ export default function WatchPositionExample() {
 
   const watchPosition = () => {
     try {
+      const currentOptions = buildCurrentPositionOptions();
+      console.log('watchPosition.getCurrentPositionOptions', currentOptions);
       Geolocation.getCurrentPosition(
         (position) => {
           setPosition(JSON.stringify(position));
         },
         (error) => Alert.alert('GetCurrentPosition Error', JSON.stringify(error)),
-        buildCurrentPositionOptions()
+        currentOptions
       );
 
+      const watchOptions = buildWatchOptions();
+      console.log('watchPosition.startOptions', watchOptions);
       const watchID = Geolocation.watchPosition(
         (position) => {
           console.log('watchPosition', JSON.stringify(position));

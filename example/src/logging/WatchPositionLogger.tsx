@@ -32,7 +32,7 @@ import {
 } from '../components/WatchOptionsForm';
 
 const CSV_HEADER =
-  'timestamp,latitude,longitude,altitude,accuracy,altitudeAccuracy,heading,speed,mocked';
+  'timestamp,latitude,longitude,altitude,accuracy,altitudeAccuracy,heading,speed';
 
 const getTargetDirectory = () => {
   if (Platform.OS === 'android') {
@@ -58,8 +58,6 @@ const formatFilenameTimestamp = (date: Date) => {
 
 const buildCsvRow = (position: GeolocationResponse) => {
   const { coords, timestamp } = position;
-  const maybeMocked = (position as Record<string, unknown>).mocked;
-
   const values = [
     timestamp,
     coords.latitude,
@@ -69,7 +67,6 @@ const buildCsvRow = (position: GeolocationResponse) => {
     coords.altitudeAccuracy ?? '',
     coords.heading ?? '',
     coords.speed ?? '',
-    typeof maybeMocked === 'boolean' ? maybeMocked : '',
   ];
 
   return values

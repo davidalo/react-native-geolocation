@@ -8,6 +8,7 @@ import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.location.LocationProvider;
+import android.location.LocationRequest;
 import android.os.Bundle;
 import android.os.Handler;
 
@@ -91,6 +92,17 @@ public class AndroidLocationManager extends BaseLocationManager {
             return;
         }
         LocationOptions locationOptions = LocationOptions.fromReactMap(options);
+        LocationRequest.Builder requestBuilder = new LocationRequest.Builder(locationOptions.interval);
+        requestBuilder.setQuality(locationOptions.highAccuracy ? LocationRequest.QUALITY_HIGH_ACCURACY : Priority.QUALITY_BALANCED_POWER_ACCURACY);
+
+        if (locationOptions.fastestInterval > 0) {
+            requestBuilder.setMinUpdateIntervalMillis(locationOptions.fastestInterval);
+        }
+        
+        if (locationOptions.distanceFilter >= 0) {
+            requestBuilder.setMinUpdateDistanceMeters(locationOptions.distanceFilter);
+        }
+        LocationRequest locationRequest = requestBuilder.build();
 
         try {
             LocationManager locationManager =
@@ -104,8 +116,8 @@ public class AndroidLocationManager extends BaseLocationManager {
                 locationManager.removeUpdates(mLocationListener);
                 locationManager.requestLocationUpdates(
                         provider,
-                        1000,
-                        locationOptions.distanceFilter,
+                        locationRequest,
+                        mReactContext.getMainExecutor(),
                         mLocationListener);
             }
             mWatchedProvider = provider;
